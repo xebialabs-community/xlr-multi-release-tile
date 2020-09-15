@@ -44,6 +44,7 @@ Then add the multi release tile and set your parameters as desired. (tags and da
 
 This tile should be extended to give more tiles for multiple releases
 
+Filters are OR not AND
 
 ## Contributing
 

@@ -13,7 +13,10 @@ import time
 import datetime
 import org.slf4j.LoggerFactory as LoggerFactory
 
+# import com.xebialabs.xlrelease.api.XLReleaseServiceHolder as XLReleaseServiceHolder
+
 logger = LoggerFactory.getLogger("Planner")
+# releaseApi = XLReleaseServiceHolder.getReleaseApi()
 
 MANUAL_TASK_DURATION = 60*60*1000
 AUTOMATED_TASK_DURATION = 1*60*1000
