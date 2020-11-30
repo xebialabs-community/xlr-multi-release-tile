@@ -14,8 +14,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   <title>User Details - Summary View</title>
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans">
   <script>
+    var david ="";
     window.addEventListener("xlrelease.load", function() {
       window.xlrelease.queryTileData(function(response) {
+        david = response.data.data;
         var obj = JSON.parse(response.data.data);
         var text = "";
         for(var j = 0; j<obj.length; j++){
@@ -25,6 +27,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         releaseStamp = obj[j]['release'].endDate;
         var releaseEndDate =new Date(releaseStamp);
         var hours = releaseEndDate.getHours()
+        var status = obj[j]['release'].status
+        if (typeof obj[j]['release'].task.name != 'undefined')
+        {
+          var taskTitle = obj[j]['release'].task.name;
+          console.log(releaseName, taskTitle);
+        }
         var options = {year: 'numeric', month: 'short', day: 'numeric',hour: '2-digit', minute: '2-digit'};
         // repos.forEach(function(repo) {
            //document.getElementById("PlanDetails").innerHTML releaseStartDate.toLocaleString()
@@ -36,8 +44,29 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                <td>&nbsp;</td>
                <td>${releaseEndDate.toLocaleString([], options)}</td>
                <td>&nbsp;</td>
+               <td>${status}</td>
+               <td>&nbsp;</td>
                </tr>
            `;
+           if (typeof obj[j]['release'].task.name != 'undefined')
+           {
+             var options = {year: 'numeric', month: 'short', day: 'numeric',hour: '2-digit', minute: '2-digit'};
+             var taskTitle = obj[j]['release'].task.name;
+             var releaseStamp = obj[j]['release'].task.startDate;
+             var releaseStartDate = new Date(releaseStamp);//response.data.data.release.phases.endDate;
+             releaseStamp = obj[j]['release'].endDate;
+             var releaseEndDate =new Date(releaseStamp);
+             text+= `
+             <tr>
+             <td><font color="purple">${taskTitle}</font></td>
+             <td>&nbsp;</td>
+             <td>${releaseStartDate.toLocaleString([], options)}</td>
+             <td>&nbsp;</td>
+             <td>${releaseEndDate.toLocaleString([], options)}</td>
+             <td>&nbsp;</td>
+              </tr>
+              `;
+           }
            for (var i = 0; i <obj[j]['release'].phases.length; i++) {
              var stamp = obj[j]['release'].phases[i].startDate
              var startDate = new Date(stamp);
@@ -59,11 +88,68 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         // })
       });
     });
+      function generatecsv(response){
+        var obj = JSON.parse(david);
+        var options = {year: 'numeric', month: 'short', day: 'numeric',hour: '2-digit', minute: '2-digit'};
+        var a = new Array(obj.length)
+        var csvContent = "data:text/csv;charset=utf-8,";
+        for(var j = 0; j<obj.length; j++){
+          // b = [];
+          // b.push(JSON.stringify(obj[j]['release']));
+          var releaseStamp = obj[j]['release'].startDate;
+          releaseStartDate = new Date(releaseStamp).toLocaleString([], options);
+          releaseStamp = obj[j]['release'].endDate;
+          releaseEndDate =new Date(releaseStamp).toLocaleString([], options);
+          var str = obj[j]['release'].name + " , " + releaseStartDate.replace(/,/g, "") + " , " + releaseEndDate.replace(/,/g, "") + "\n";
+            for (var i = 0; i <obj[j]['release'].phases.length; i++) {
+              var stamp = obj[j]['release'].phases[i].startDate
+              var startDate = new Date(stamp).toLocaleString([], options);
+              stamp = obj[j]['release'].phases[i].endDate;
+              var endDate = new Date(stamp).toLocaleString([], options);
+              str += "," + obj[j]['release'].phases[i].name + " , " + startDate.replace(/,/g, "") + " , " + endDate.replace(/,/g, "") + "\n";
+            }
+          // b.push(obj[j]['release'].name);
+          // var releaseStamp = obj[j]['release'].startDate;
+          // b.push(releaseStartDate = new Date(releaseStamp));//response.data.data.release.phases.endDate;
+          // releaseStamp = obj[j]['release'].endDate;
+          // b.push(releaseEndDate =new Date(releaseStamp));
+          // b.push("\n");
+          // var hi =  obj[j]['release'];
+          // obj[j]['release'] =  hi + "\\n";
+          // obj[j].write('\n')
+          // a[j] = new Array(str);
+          a[j] = str;
+          csvContent += str;
+        }
+        david = JSON.stringify(obj);
+        console.log(a);
+        var encodedUri = encodeURI(csvContent);
+        window.open(encodedUri);
+      }
+  </script>
+  <script type="text/javascript">
+  // window.xlrelease.generatecsv(function(response){
+  // function generatecsv(response){
+  // document.getElementById('info').innerHTML = "";
+  // let a = [];
+  // var table = document.getElementById('myTable');
+  // for (var r = 0, n = table.rows.length; r < n; r++) {
+  //   for (var c = 0, m = table.rows[0].cells.length; c < m; c=c+2) {
+  //       var i = 0;
+  //       console.log(c);
+  //       a[0].push(table.rows[0].cells[c].innerHTML);
+  //   }
+  // }
+//   console.log("hodsaf")
+//   var csvContent = "data:text/csv;charset=utf-8," + response;
+//   var encodedUri = encodeURI(csvContent);
+//   window.open(encodedUri);
+// }
   </script>
 </head>
 
 <body>
-<table class="table table-rounded table-striped" aria-describedby="Basic information on recent git commits">
+<table class="table table-rounded table-striped" id="myTable" aria-describedby="Basic information on recent git commits">
   <thead>
     <tr>
       <th scope="col" align="left">Release title</th>
@@ -71,11 +157,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       <th scope="col" align="left">Start Date</th>
       <th></th>
       <th scope="col" align="left">End Date</th>
+      <th></th>
+      <th scope="col" align="left">Status</th>
     </tr>
   </thead>
   <tbody id="PlanDetails"></tbody>
   <tbody id="phaseTimes"></tbody>
 </table>
+<input id="clickMe" type="button" value="Generate CSV" onclick="generatecsv();" />
+<!-- <div class="col-2 column">
+    <button ng-click="generatecsv()" class="btn btn-default">Generate CSV</button>
+</div> -->
 </body>
 
 </html>

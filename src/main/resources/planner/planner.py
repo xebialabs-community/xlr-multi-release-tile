@@ -11,12 +11,20 @@ from requests.auth import HTTPBasicAuth
 import json
 import time
 import datetime
+#import com.xebialabs.xlrelease.api.v1
+#import com.xebialabs.xlrelease.domain
+from java.time import LocalDate, ZoneId
+# beter way to do this
+import java.util.Date
+import dateutil.parser
 import org.slf4j.LoggerFactory as LoggerFactory
-
-# import com.xebialabs.xlrelease.api.XLReleaseServiceHolder as XLReleaseServiceHolder
+# import com.xebialabs.xlrelease.api.v1 as releaseApi
+import com.xebialabs.xlrelease.api.XLReleaseServiceHolder as XLReleaseServiceHolder
 
 logger = LoggerFactory.getLogger("Planner")
-# releaseApi = XLReleaseServiceHolder.getReleaseApi()
+releaseApi = XLReleaseServiceHolder.getReleaseApi()
+phaseApi = XLReleaseServiceHolder.getPhaseApi()
+taskApi = XLReleaseServiceHolder.getTaskApi()
 
 MANUAL_TASK_DURATION = 60*60*1000
 AUTOMATED_TASK_DURATION = 1*60*1000
@@ -25,30 +33,105 @@ releaseStart = 0
 lastPhaseStart = 0
 
 class Planner(object):
-    def __init__(self, server):
-        self.username = server['username']
-        self.password = server['password']
-        self.base_url = server['url']
+    def __init__(self):
+        return
 
-    def get_Releases2(self, releaseId):
-        reqURL = "%s/releases/" % (self.base_url)
-        reqURL = reqURL + releaseId
-        headers = { "Content-Type": "application/json", "Accept": "application/json" }
-        myResponse = requests.get(reqURL,headers=headers, auth=HTTPBasicAuth(self.username, self.password))
-        if(myResponse.ok):
-            release = json.loads(myResponse.content)
-            newRelease = self.planner(release)
-            return newRelease
+    def build_object(self, releaseId):
+        newRelease = {}
+        newRelease['release'] = {}
+        #getArchivedRelease
+        release = releaseApi.getRelease(releaseId)
+        newRelease['title'] = release.title
+        newRelease['scheduledStartDate'] = release.scheduledStartDate
+        newRelease['startDate'] = release.startDate
+        newRelease['dueDate'] = release.dueDate
+        newRelease['endDate'] = release.endDate
+        newRelease['plannedDuration'] = release.plannedDuration
+        newRelease['status'] = str(release.status)
+        # bill = type(release['startDate'])
+        newRelease['phases'] = []
+        phases = release.phases
+        test = []
+        # logger.info(str(phases))
+        for x in phases:
+            phase_list = {}
+            phase_list['title'] = x.title
+            phase_list['scheduledStartDate'] = x.scheduledStartDate
+            phase_list['startDate'] = x.startDate
+            phase_list['dueDate'] = x.dueDate
+            phase_list['endDate'] = x.endDate
+            phase_list['plannedDuration'] = x.plannedDuration
+            phase_list['status'] = str(x.status)
+            phase_list['tasks'] = []
+            tasks = x.tasks
+            for w in tasks:
+                test.append(taskApi.getTask(str(w)))
+                task_list = {}
+                task_list['title'] = w.title
+                task_list['scheduledStartDate'] = w.scheduledStartDate
+                task_list['startDate'] = w.startDate
+                task_list['dueDate'] = w.dueDate
+                task_list['endDate'] = w.endDate
+                task_list['plannedDuration'] = w.plannedDuration
+                task_list['automated'] = w.automated
+                task_list['status'] = str(w.status)
+                task_list['type'] = w.type
+                phase_list['tasks'].append(task_list)
+            newRelease['phases'].append(phase_list)
+        newRelease = self.convertToEpoch(newRelease)
+        newRelease = self.planner(newRelease)
+        return newRelease
 
-        else:
-            print("Error code %s" % myResponse.status_code )
-            return 0
+    def convertToEpoch(self, release):
+        # if str(type(release['startDate'])) == "<type 'java.util.Date'>":
+        if isinstance(release['startDate'], java.util.Date):
+            release['startDate'] = release['startDate'].getTime()
+        if isinstance(release['scheduledStartDate'], java.util.Date):
+            release['scheduledStartDate'] = release['scheduledStartDate'].getTime()
+        if isinstance(release['startDate'], java.util.Date):
+            release['startDate'] = release['startDate'].getTime()
+        if isinstance(release['endDate'], java.util.Date):
+            release['endDate'] = release['endDate'].getTime()
+        if isinstance(release['dueDate'], java.util.Date):
+            release['dueDate'] = release['dueDate'].getTime()
+        if isinstance(release['plannedDuration'], java.util.Date):
+            release['plannedDuration'] = release['plannedDuration'].getTime()
+        phases = release['phases']
+        for x in phases:
+            if isinstance(x['scheduledStartDate'], java.util.Date):
+                x['scheduledStartDate'] = x['scheduledStartDate'].getTime()
+            if isinstance(x['startDate'], java.util.Date):
+                x['startDate'] = x['startDate'].getTime()
+            if isinstance(x['endDate'], java.util.Date):
+                x['endDate'] = x['endDate'].getTime()
+            if isinstance(x['dueDate'], java.util.Date):
+                x['dueDate'] = x['dueDate'].getTime()
+            if isinstance(x['plannedDuration'], java.util.Date):
+                x['plannedDuration'] = x['plannedDuration'].getTime()
+            tasks = x['tasks']
+            for w in tasks:
+                if isinstance(w['scheduledStartDate'], java.util.Date):
+                    w['scheduledStartDate'] = w['scheduledStartDate'].getTime()
+                if isinstance(w['startDate'], java.util.Date):
+                    w['startDate'] = w['startDate'].getTime()
+                if isinstance(w['endDate'], java.util.Date):
+                    w['endDate'] = w['endDate'].getTime()
+                if isinstance(w['dueDate'], java.util.Date):
+                    w['dueDate'] = w['dueDate'].getTime()
+                if isinstance(w['plannedDuration'], java.util.Date):
+                    w['plannedDuration'] = w['plannedDuration'].getTime()
+        return release
+
+    def get_Releases(self, releaseId):
+        self.planner(release)
 
 
     def planner(self, release):
         release = self.getPhaseTime(release)
         release = self.convert_to_string(release)
+        #response.entity = {"status": "OK", "Release": release}
         return release
+        # self.print_dates(release)
 
     def getPhaseTime(self, release):
         phases = release['phases']
@@ -66,11 +149,12 @@ class Planner(object):
 
     def set_task_duration(self, tasks):
         for x in tasks:
-            if x['dueDate'] == None and x['done'] == False and x['plannedDuration'] == None:
-                if x['hasBeenStarted'] == True:
-                    if (x['type'] == "xlrelease.CustomScriptTask" or x['type'] == "xlrelease.NotificationTask"):
+            if x['dueDate'] == None and x['endDate'] == None and x['plannedDuration'] == None:
+                if x['status'] == "IN_PROGRESS" or x['status'] == "DONE":
+                    if x['automated']: #(x['type'] == "xlrelease.CustomScriptTask" or x['type'] == "xlrelease.NotificationTask"):
                         x['plannedDuration'] = AUTOMATED_TASK_DURATION
                         currentTime = int(round(time.time()))
+                        currentTime = currentTime*1000
                         if x['plannedDuration'] + x['startDate'] < currentTime:
                             x['plannedDuration'] = currentTime - x['startDate']
                         # elif x['plannedDuration'] + x['startDate'] > currentTime:
@@ -88,7 +172,7 @@ class Planner(object):
                         # else:
                         #     x['plannedDuration'] = x['plannedDuration'] + (currentTime-x['startDate'])
                 else:
-                    if (x['type'] == "xlrelease.CustomScriptTask" or x['type'] == "xlrelease.NotificationTask"):
+                    if x['automated']:#(x['type'] == "xlrelease.CustomScriptTask" or x['type'] == "xlrelease.NotificationTask"):
                         x['plannedDuration'] = AUTOMATED_TASK_DURATION
                     else:
                         x['plannedDuration'] = MANUAL_TASK_DURATION
@@ -121,13 +205,15 @@ class Planner(object):
                                         phases[x]['dueDate'] = phases[x]['startDate'] + phases[x]['plannedDuration']
                                         phases[x]['dueDate'] = self.get_furthest_date(phases[x]['dueDate'], tasks[i]['dueDate'])
                                 else:
-                                    logger.error("No phase end date")
+                                    print "No phase end date"
                             else:
                                 phases[x]['dueDate'] = tasks[i]['dueDate']
                                 phases[x]['tasks'] = tasks
-# def print_dates(release):
-#     #response.entity = {"status": "OK", "Release": release}
-#
+    def print_dates(self, release):
+        logger.info(release['startDate'])
+        logger.info("In print dates")
+        return release
+        #response.entity = {"status": "OK", "Release": release}
 
     def convert_to_string(self, release):
         if release['scheduledStartDate'] != None:
@@ -140,20 +226,6 @@ class Planner(object):
             release['dueDate'] = str(release['dueDate'])
         if release['plannedDuration'] != None:
             release['plannedDuration'] = str(release['plannedDuration'])
-        if release['currentTask'] != None:
-            if release['currentTask']['startDate'] != None:
-                release['currentTask']['startDate'] = str(release['currentTask']['startDate'])
-            if release['currentTask']['endDate'] != None:
-                release['currentTask']['endDate'] = str(release['currentTask']['endDate'])
-        if release['currentSimpleTasks'] != None:
-            crc = release['currentSimpleTasks']
-            for h in crc:
-                if h['startDate'] != None:
-                    h['startDate'] = str(h['startDate'])
-                if h['endDate'] != None:
-                    h['startDate'] = str(h['endDate'])
-                if h['dueDate'] != None:
-                    h['dueDate'] = str(h['dueDate'])
         phases = release['phases']
         for x in phases:
             if x['scheduledStartDate'] != None:
@@ -179,7 +251,7 @@ class Planner(object):
                 if w['plannedDuration'] != None:
                     w['plannedDuration'] = str(w['plannedDuration'])
         return release
-#
+
     def get_furthest_date(self, a, b):
         if a > b:
             return a

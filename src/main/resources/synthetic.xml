@@ -11,15 +11,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
            xmlns="http://www.xebialabs.com/deployit/synthetic"
            xsi:schemaLocation="http://www.xebialabs.com/deployit/synthetic synthetic.xsd">
 
-      <type type="planner.Server" label="XL Release: Server" extends="configuration.HttpConnection">
-      </type>
+      <!-- <type type="planner.Server" label="XL Release: Server" extends="configuration.HttpConnection">
+      </type> -->
 
      <!-- Tile Configuration -->
      <type type="planner.multiReleaseTimeline" label="Multi release Tile" extends="xlrelease.Tile" description="Display the multi release timelines">
          <property default="release,folder,global" hidden="true" name="supportedScopes" kind="list_of_string"/>
          <property name="uri" hidden="true" default="multi-release-timeline.html"/>
          <property name="title" description="Tile title." default="Multi Release Timeline"/>
-         <property name="timePeriod" category="input" kind="enum" required="true" default="Last 30 days" description="Time period to display">
+         <property name="fromDateTime" category="input" kind="date" required="false" label="Start From Datetime" description="Filter to only include tasks executed after this datetime"/>
+         <property name="toDateTime" category="input" kind="date" required="false" label="Start To Datetime" description="Filter to only include tasks executed before this datetime"/>
+         <property name="endFromDateTime" category="input" kind="date" required="false" label="End Datetime" description="Filter to only include tasks executed after this datetime"/>
+         <property name="endToDateTime" category="input" kind="date" required="false" label="End Datetime" description="Filter to only include tasks executed before this datetime"/>
+         <!-- <property name="timePeriod" category="input" kind="enum" required="true" default="Last 30 days" description="Time period to display">
            <enum-values>
              <value>Last 30 days</value>
              <value>Last 3 months</value>
@@ -27,10 +31,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
              <value>Last year</value>
              <value>Range</value>
            </enum-values>
-         </property>
+         </property> -->
          <property name="releaseTags" category="input" kind="set_of_string" required="false" label="Release Tags" description="Only include releases which have one of these tags"/>
          <property name="folderFilter" category="input" kind="set_of_string" required="false" description="release tag filter"/>
-         <property name="server" category="input" referenced-type="planner.Server" kind="ci" label="Server" description="The XL Release instance to connect to"/>
+         <property name="releaseTitle" category="input" required="false" />
+         <property name="taskTitle" category="input" required="false" />
+         <property name="subFolders" category="input" kind="boolean" description="Get subfolders or not" label="Sub Folders" />
+         <property name="archived" category="input" kind="boolean" description="Get archived releases" label="Archived Releases" />
+         <!-- <property name="server" category="input" referenced-type="planner.Server" kind="ci" label="Server" description="The XL Release instance to connect to"/> -->
            <!-- <property name="username" category="input" required="false" description="Optionally, override the username used to connect to the server"/>
            <property name="password" category="input" password="true" required="false" description="Optionally, override the password used to connect to the server"/> -->
      </type>
