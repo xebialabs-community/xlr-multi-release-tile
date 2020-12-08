@@ -36,11 +36,15 @@ class Planner(object):
     def __init__(self):
         return
 
-    def build_object(self, releaseId):
+    def build_object(self, releaseId, archived):
         newRelease = {}
         newRelease['release'] = {}
-        #getArchivedRelease
-        release = releaseApi.getRelease(releaseId)
+        if archived:
+            release = releaseApi.getArchivedRelease(releaseId)
+            #getArchivedRelease
+        else:
+            release = releaseApi.getRelease(releaseId)
+        newRelease['owner'] = str(release.owner)
         newRelease['title'] = release.title
         newRelease['scheduledStartDate'] = release.scheduledStartDate
         newRelease['startDate'] = release.startDate
@@ -65,7 +69,9 @@ class Planner(object):
             phase_list['tasks'] = []
             tasks = x.tasks
             for w in tasks:
-                test.append(taskApi.getTask(str(w)))
+                # if archived:
+                #     logger.info(str(w))
+        #         test.append(taskApi.getTask(str(w)))
                 task_list = {}
                 task_list['title'] = w.title
                 task_list['scheduledStartDate'] = w.scheduledStartDate

@@ -51,23 +51,25 @@ def get_Releases():
         releaseFilters = ReleasesFilters()
         releaseFilters.withCompleted()
         releases = releaseApi.searchReleases(releaseFilters)
-    # if archived:
-    #     a = []
-    #     releaseFilters = ReleasesFilters()
-    #     releaseFilters.setOnlyArchived(True)
-    #     a = releaseApi.searchReleases(releaseFilters)
-        #changed to list so we could combine them
-        # releases = list(releases) + list(a)
+    if archived:
+        a = []
+        releaseFilters = ReleasesFilters()
+        releaseFilters.setOnlyArchived(True)
+        a = releaseApi.searchReleases(releaseFilters)
+        releases = list(releases) + list(a)
     if releases != []:
         for x in releases:
+            if(str(x.status) == "COMPLETED" or str(x.status) == "ABORTED"):
+                arch = True
+            else:
+                arch = False
             # #commenting out for archived
-            if titleFilter(x.id, x.title):
+            if titleFilter(x.id, x.title, arch):
                 if(fromDateTime is None and toDateTime is None and endFromDateTime is None and endToDateTime is None):
-                    logger.info(x.id)
-                    get_planned_dates(x.id)
+                    get_planned_dates(x.id, arch)
                 else:
                     if(dateFilter(x.startDate, x.dueDate)):
-                        get_planned_dates(x.id)
+                        get_planned_dates(x.id, arch)
 
 def getFilteredReleases():
     releaseFilters = []
@@ -91,15 +93,15 @@ def getFilteredReleases():
                 releases += releaseApi.searchReleases(releaseFilters)
     return releases
 
-def titleFilter(releaseId, theReleaseTitle):
+def titleFilter(releaseId, theReleaseTitle, arch):
     if releaseTitle and taskTitle:
-        if checkForApplicationName(releaseTitle, theReleaseTitle) and checkForTaskTitle(releaseId, taskTitle):
+        if checkForApplicationName(releaseTitle, theReleaseTitle) and checkForTaskTitle(releaseId, taskTitle, arch):
             return True
     elif releaseTitle:
         if checkForApplicationName(releaseTitle, theReleaseTitle):
             return True
     elif taskTitle:
-        if checkForTaskTitle(releaseId, taskTitle):
+        if checkForTaskTitle(releaseId, taskTitle, arch):
             return True
     else:
         return True
@@ -148,10 +150,13 @@ def getSubFolders(folderId):
     #     for folder in folders:
     #         folders += getSubFolders(folder.id)
     # return folders
-def checkForTaskTitle(releaseId, taskTitle):
+def checkForTaskTitle(releaseId, taskTitle, arch):
     if(taskTitle != ""):
-        logger.info(str(releaseId))
-        b = taskApi.searchTasksByTitle(taskTitle, "",  releaseId)
+        if arch:
+            release = releaseApi.getArchivedRelease(releaseId)
+            b = release.getTasksByTitle("", taskTitle)
+        else:
+            b = taskApi.searchTasksByTitle(taskTitle, "",  releaseId)
         if b:
             return True
         else:
@@ -173,9 +178,9 @@ def dateFilter(releaseStartDate, releaseEndDate):
             return False
     return True
 
-def get_planned_dates(releaseId):
+def get_planned_dates(releaseId, arch):
         multiPlanner = Planner()
-        release = multiPlanner.build_object(releaseId)
+        release = multiPlanner.build_object(releaseId, arch)
         # release = the_planner.get_Releases2(releaseId)
 
 
@@ -187,6 +192,7 @@ def print_dates(release):
     temp['release'] = {}
     temp['release']['name'] = release['title']
     temp['release']['status'] = release['status']
+    temp['release']['owner'] = release['owner']
 
     if release['startDate'] != None:
         temp['release']['startDate'] = int(release['startDate'])
