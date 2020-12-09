@@ -59,15 +59,23 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
              var taskTitle = obj[j]['release'].task.name;
              var releaseStamp = obj[j]['release'].task.startDate;
              var releaseStartDate = new Date(releaseStamp);//response.data.data.release.phases.endDate;
-             releaseStamp = obj[j]['release'].endDate;
+             releaseStamp = obj[j]['release'].task.endDate;
              var releaseEndDate =new Date(releaseStamp);
+             var taskStatus = obj[j]['release'].task.status;
+             var taskOwner = obj[j]['release'].task.owner;
              text+= `
              <tr>
-             <td><font color="purple">${taskTitle}</font></td>
+             <td>${taskTitle}</td>
              <td>&nbsp;</td>
              <td>${releaseStartDate.toLocaleString([], options)}</td>
              <td>&nbsp;</td>
              <td>${releaseEndDate.toLocaleString([], options)}</td>
+             <td>&nbsp;</td>
+             <td>${taskStatus}</td>
+             <td>&nbsp;</td>
+             <td>${taskOwner}</td>
+             <td>&nbsp;</td>
+             <td>Task</td>
              <td>&nbsp;</td>
               </tr>
               `;
@@ -78,6 +86,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
              stamp = obj[j]['release'].phases[i].endDate;
              var endDate = new Date(stamp);
              var phaseName = obj[j]['release'].phases[i].name;
+             var phaseStatus = obj[j]['release'].phases[i].status;
              text += `
                  <tr>
                  <td>${phaseName}</td>
@@ -86,7 +95,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                  <td>&nbsp;</td>
                  <td>${endDate.toLocaleString([], options)}</td>
                  <td>&nbsp;</td>
-                 <td></td>
+                 <td>${phaseStatus}</td>
                  <td>&nbsp;</td>
                  <td></td>
                  <td>&nbsp;</td>
@@ -104,6 +113,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         var options = {year: 'numeric', month: 'short', day: 'numeric',hour: '2-digit', minute: '2-digit'};
         var a = new Array(obj.length)
         var csvContent = "data:text/csv;charset=utf-8,";
+        var title = "Release Title , Start Date, End Date, Status, Owner, Type" + "\n";
         for(var j = 0; j<obj.length; j++){
           // b = [];
           // b.push(JSON.stringify(obj[j]['release']));
@@ -111,13 +121,21 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           releaseStartDate = new Date(releaseStamp).toLocaleString([], options);
           releaseStamp = obj[j]['release'].endDate;
           releaseEndDate =new Date(releaseStamp).toLocaleString([], options);
-          var str = obj[j]['release'].name + " , " + releaseStartDate.replace(/,/g, "") + " , " + releaseEndDate.replace(/,/g, "") + " , " + obj[j]['release'].owner + " , " + "Release" + "\n";
+          var str = obj[j]['release'].name + " , " + releaseStartDate.replace(/,/g, "") + " , " + releaseEndDate.replace(/,/g, "") + " , " + obj[j]['release'].status + " , " + obj[j]['release'].owner + " , " + "Release" + "\n";
+          if (typeof obj[j]['release'].task.name != 'undefined')
+          {
+            var taskStamp = obj[j]['release'].task.startDate;
+            var tastStartDate = new Date(taskStamp).toLocaleString([], options);
+            taskStamp = obj[j]['release'].task.endDate;
+            var taskEndDate = new Date(taskStamp).toLocaleString([], options);
+            str += obj[j]['release'].task.name + " , " + tastStartDate.replace(/,/g, "") + " , " + taskEndDate.replace(/,/g, "")  + " , " + obj[j]['release'].task.status + " , "+ obj[j]['release'].task.owner + " , " + "Task" + "\n";
+          }
             for (var i = 0; i <obj[j]['release'].phases.length; i++) {
-              var stamp = obj[j]['release'].phases[i].startDate
+              var stamp = obj[j]['release'].phases[i].startDate;
               var startDate = new Date(stamp).toLocaleString([], options);
               stamp = obj[j]['release'].phases[i].endDate;
               var endDate = new Date(stamp).toLocaleString([], options);
-              str += obj[j]['release'].phases[i].name + " , " + startDate.replace(/,/g, "") + " , " + endDate.replace(/,/g, "") + " , " + " " + " , " + "Phase" + "\n";
+              str += obj[j]['release'].phases[i].name + " , " + startDate.replace(/,/g, "") + " , " + endDate.replace(/,/g, "")  + " , " + obj[j]['release'].phases[i].status + " , "+ " " + " , " + "Phase" + "\n";
             }
           // b.push(obj[j]['release'].name);
           // var releaseStamp = obj[j]['release'].startDate;
@@ -129,6 +147,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           // obj[j]['release'] =  hi + "\\n";
           // obj[j].write('\n')
           // a[j] = new Array(str);
+          if(j == 0){
+            str = title+str;
+          }
           a[j] = str;
           csvContent += str;
         }

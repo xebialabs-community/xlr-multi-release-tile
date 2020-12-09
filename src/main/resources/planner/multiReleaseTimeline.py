@@ -218,6 +218,7 @@ def print_dates(release):
             endDate =int(x['endDate'])
         tempPhase = {}
         tempPhase['name'] = x['title']
+        tempPhase['status'] = str(x['status'])
         tempPhase['startDate'] = startDate
         tempPhase['endDate'] = endDate
         temp['release']['phases'].append(tempPhase)
@@ -236,8 +237,9 @@ def print_dates(release):
                 tempTask['name'] = w['title']
                 tempTask['startDate'] = startDate
                 tempTask['endDate'] = endDate
+                tempTask['owner'] = str(w['owner'])
+                tempTask['status'] = str(w['status'])
                 temp['release']['task'] = tempTask
-        #         temp['release']['filteredReleaseName']['endDate'] = endDate
 
 
     dict.append(temp)

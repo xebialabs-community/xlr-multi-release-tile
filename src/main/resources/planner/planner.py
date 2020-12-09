@@ -74,6 +74,7 @@ class Planner(object):
         #         test.append(taskApi.getTask(str(w)))
                 task_list = {}
                 task_list['title'] = w.title
+                task_list['owner'] = w.owner
                 task_list['scheduledStartDate'] = w.scheduledStartDate
                 task_list['startDate'] = w.startDate
                 task_list['dueDate'] = w.dueDate
