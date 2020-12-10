@@ -50,19 +50,21 @@ def get_Releases():
         logger.info("Regular Release")
         releaseFilters = ReleasesFilters()
         releaseFilters.withCompleted()
-        releases = releaseApi.searchReleases(releaseFilters)
+        releases = gatherReleases(releaseFilters)
+
     if archived:
-        a = []
+        archivedReleases = []
         releaseFilters = ReleasesFilters()
         releaseFilters.setOnlyArchived(True)
-        a = releaseApi.searchReleases(releaseFilters)
-        releases = list(releases) + list(a)
+        archivedReleases = gatherReleases(releaseFilters)
+        releases = list(releases) + list(archivedReleases)
     if releases != []:
         for x in releases:
             if(str(x.status) == "COMPLETED" or str(x.status) == "ABORTED"):
                 arch = True
             else:
                 arch = False
+            # arch = False
             # #commenting out for archived
             if titleFilter(x.id, x.title, arch):
                 if(fromDateTime is None and toDateTime is None and endFromDateTime is None and endToDateTime is None):
@@ -78,19 +80,19 @@ def getFilteredReleases():
     if filterReleaseTags != [] and filterReleaseFolders == []:
         for filterReleaseTag in filterReleaseTags:
             releaseFilters.tags = [filterReleaseTag]
-            releases += releaseApi.searchReleases(releaseFilters)
+            releases += gatherReleases(releaseFilters)
     elif filterReleaseFolders != [] and filterReleaseTags == []:
         for filterReleaseFolder in filterReleaseFolders:
             folderId = checkForFolder(filterReleaseFolder)
             releaseFilters.parentId = str(folderId)
-            releases += releaseApi.searchReleases(releaseFilters)
+            releases += gatherReleases(releaseFilters)
     else:
         for filterReleaseFolder in filterReleaseFolders:
             folderId = checkForFolder(filterReleaseFolder)
             for filterReleaseTag in filterReleaseTags:
                 releaseFilters.tags = [filterReleaseTag]
                 releaseFilters.parentId = str(folderId)
-                releases += releaseApi.searchReleases(releaseFilters)
+                releases += gatherReleases(releaseFilters)
     return releases
 
 def titleFilter(releaseId, theReleaseTitle, arch):
@@ -110,6 +112,18 @@ def titleFilter(releaseId, theReleaseTitle, arch):
             #     logger.info("hi")
             # if checkForApplicationName(releaseTitle, x.title):
 
+def gatherReleases(releaseFilters):
+    newReleases =[]
+    releases = []
+    i = 0
+    newReleases = releaseApi.searchReleases(releaseFilters, i, 100)
+    # releases = newReleases
+    while newReleases:
+        releases = list(releases) + list(newReleases)
+        newReleases = []
+        i = i+1
+        newReleases = releaseApi.searchReleases(releaseFilters, i, 100)
+    return releases
 
 def checkForApplicationName(applicationName, releaseTitle):
     if applicationName != None:
