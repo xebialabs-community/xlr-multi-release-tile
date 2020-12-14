@@ -43,8 +43,10 @@ dict = []
 
 def get_Releases():
     releases = []
+    archivedReleases = []
     if filterReleaseTags != [] or filterReleaseFolders != []:
-        releases = getFilteredReleases()
+        inArchived = False
+        releases = getFilteredReleases(inArchived)
         logger.info("Filtered Releases")
     else:
         logger.info("Regular Release")
@@ -53,19 +55,27 @@ def get_Releases():
         releases = gatherReleases(releaseFilters)
 
     if archived:
-        archivedReleases = []
-        releaseFilters = ReleasesFilters()
-        releaseFilters.setOnlyArchived(True)
-        archivedReleases = gatherReleases(releaseFilters)
-        releases = list(releases) + list(archivedReleases)
+        if filterReleaseTags != [] or filterReleaseFolders != []:
+            inArchived = True
+            archivedReleases = getFilteredReleases(inArchived)
+        else:
+            releaseFilters = ReleasesFilters()
+            releaseFilters.setOnlyArchived(True)
+            archivedReleases = gatherReleases(releaseFilters)
+        # releases = list(releases) + list(archivedReleases)
     if releases != []:
         for x in releases:
-            if(str(x.status) == "COMPLETED" or str(x.status) == "ABORTED"):
-                arch = True
-            else:
-                arch = False
-            # arch = False
-            # #commenting out for archived
+            arch = False
+            if titleFilter(x.id, x.title, arch):
+                if(fromDateTime is None and toDateTime is None and endFromDateTime is None and endToDateTime is None):
+                    get_planned_dates(x.id, arch)
+                else:
+                    if(dateFilter(x.startDate, x.dueDate)):
+                        get_planned_dates(x.id, arch)
+    ##archived portion
+    if archivedReleases != []:
+        for x in archivedReleases:
+            arch = True
             if titleFilter(x.id, x.title, arch):
                 if(fromDateTime is None and toDateTime is None and endFromDateTime is None and endToDateTime is None):
                     get_planned_dates(x.id, arch)
@@ -73,10 +83,12 @@ def get_Releases():
                     if(dateFilter(x.startDate, x.dueDate)):
                         get_planned_dates(x.id, arch)
 
-def getFilteredReleases():
+def getFilteredReleases(inArchived):
     releaseFilters = []
     releases = []
     releaseFilters = ReleasesFilters()
+    if inArchived:
+        releaseFilters.setOnlyArchived(True)
     if filterReleaseTags != [] and filterReleaseFolders == []:
         for filterReleaseTag in filterReleaseTags:
             releaseFilters.tags = [filterReleaseTag]
@@ -196,7 +208,6 @@ def get_planned_dates(releaseId, arch):
         multiPlanner = Planner()
         release = multiPlanner.build_object(releaseId, arch)
         # release = the_planner.get_Releases2(releaseId)
-
 
         print_dates(release)
 
