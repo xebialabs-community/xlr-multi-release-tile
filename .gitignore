@@ -6,3 +6,4 @@ build
 nohup.out
 supervisord.*
 deploy_key
+deploy_key
