@@ -16,7 +16,7 @@ jobs:
           java-version: 8
       - name: Build with Gradle
         run: ./gradlew clean assemble
-      - name: Create Release
+      - name: Create Release in GitHub
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -26,12 +26,12 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
-      - name: Upload Release Asset
+      - name: Upload Release Asset to GitHub
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/libs/${{ github.repository }}-${{ github.ref }}.jar
-          asset_name: ${{ github.repository }}-${{ github.ref }}.jar
+          asset_path: build/libs/$(echo ${{ github.repository }} | awk -F / '{print $2}')-$(echo ${{ github.ref }} | awk -F / '{print $3}').jar
+          asset_name: $(echo ${{ github.repository }} | awk -F / '{print $2}')-$(echo ${{ github.ref }} | awk -F / '{print $3}').jar
           asset_content_type: application/jar
