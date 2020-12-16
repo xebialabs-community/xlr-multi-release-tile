@@ -18,9 +18,9 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean assemble
       - name: deploy
-        uses: xresloader/upload-to-github-release@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: "marvinpinto/action-automatic-releases@latest"
         with:
-          file: "*.jar"
-          tags: true
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          files: |
+            ./build/libs/xlr-multi-release-tile*.*
