@@ -24,3 +24,12 @@ jobs:
           prerelease: false
           files: |
             ./build/libs/xlr-multi-release-tile*.*
+      - name: deploy to dist
+        uses: horochx/deploy-via-scp@master
+        with:
+          local: ./build/libs/xlr-multi-release-tile*.*
+          remote: ${{ secrets.REMOTE }} 
+          host: ${{ secrets.HOST }} 
+          port: ${{ secrets.PORT }} 
+          user: ${{ secrets.USER }} 
+          key: ${{ secrets.KEY }}
