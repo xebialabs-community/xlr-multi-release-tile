@@ -17,7 +17,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
      <!-- Tile Configuration -->
      <type type="planner.multiReleaseTimeline" label="Multi release Tile" extends="xlrelease.Tile" description="Display the multi release timelines">
          <property default="release,folder,global" hidden="true" name="supportedScopes" kind="list_of_string"/>
-         <property name="uri" hidden="true" default="multi-release-timeline.html"/>
+         <property name="uri" hidden="true" default="Multi-release-timeline.html"/>
          <property name="title" description="Tile title." default="Multi Release Timeline"/>
          <property name="fromDateTime" category="input" kind="date" required="false" label="Start From Datetime" description="Filter to only include tasks executed after this datetime"/>
          <property name="toDateTime" category="input" kind="date" required="false" label="Start To Datetime" description="Filter to only include tasks executed before this datetime"/>
@@ -37,7 +37,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
          <property name="releaseTitle" category="input" required="false" />
          <property name="taskTitle" category="input" required="false" />
          <property name="subFolders" category="input" kind="boolean" description="Get subfolders or not" label="Sub Folders" />
-         <property name="archived" category="input" kind="boolean" description="Get archived releases" label="Archived Releases" />
+         <property name="archived" category="input" kind="boolean" description="Get archived releases" label="Archived Release" />
          <!-- <property name="server" category="input" referenced-type="planner.Server" kind="ci" label="Server" description="The XL Release instance to connect to"/> -->
            <!-- <property name="username" category="input" required="false" description="Optionally, override the username used to connect to the server"/>
            <property name="password" category="input" password="true" required="false" description="Optionally, override the password used to connect to the server"/> -->
