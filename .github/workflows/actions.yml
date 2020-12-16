@@ -25,11 +25,10 @@ jobs:
           files: |
             ./build/libs/xlr-multi-release-tile*.*
       - name: deploy to dist
-        uses: horochx/deploy-via-scp@master
-        with:
-          local: ./build/libs/xlr-multi-release-tile*.*
-          remote: ${{ secrets.REMOTE }} 
-          host: ${{ secrets.HOST }} 
-          port: ${{ secrets.PORT }} 
-          user: ${{ secrets.USER }} 
-          key: ${{ secrets.KEY }}
+          uses: easingthemes/ssh-deploy@v2.1.5
+          env:
+            SSH_PRIVATE_KEY: ${{ secrets.KEY }}
+            SOURCE: "./build/libs/xlr-multi-release-tile*.*"
+            REMOTE_HOST: ${{ secrets.HOST }}
+            REMOTE_USER: ${{ secrets.USER }}
+            TARGET: ${{ secrets.REMOTE }}
