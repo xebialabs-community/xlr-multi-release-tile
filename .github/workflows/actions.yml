@@ -13,5 +13,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
+      -name: java-home
+        run: echo "::set-output name=path::$JAVA_HOME"
       - name: Build with Gradle
         run: ./gradlew clean assemble
