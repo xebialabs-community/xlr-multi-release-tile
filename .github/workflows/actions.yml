@@ -32,6 +32,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/libs/*.jar
+          asset_path: build/libs/${{ github.repository }}-${{ github.ref }}.jar
           asset_name: ${{ github.repository }}-${{ github.ref }}.jar
           asset_content_type: application/jar
