@@ -7,26 +7,20 @@ before_install:
 - echo -e "Host $DIST_HOST\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
 - chmod 600 ./deploy_key
 - ssh-add ./deploy_key
-- chmod +x gradlew
 deploy:
-  matrix:
-  - provider: releases
-    user: $GIT_USER
-    password: $GIT_PASSWORD
-    file: build/libs/*
-    file_glob: true
-    skip_cleanup: true
-    on:
-      tags: true
-      repo: xebialabs-community/xlr-multi-release-tile
-  - provider: script
-    skip_cleanup: true
-    script: rsync --update -raz -i $TRAVIS_BUILD_DIR/build/libs/*.jar $DIST_USER@$DIST_HOST:$DIST_PATH/${TRAVIS_REPO_SLUG#*/}/
-    on:
-      tags: true
-      repo: xebialabs-community/xlr-multi-release-tile
-  password:
-    secure: NAXI82mo2a/NeeXo/H3aeaHS6ZQAuA9/Thb39iSglkwOT8cNPDe9uztIkIpC2ljEUL/HpBIGET1xCIe5+cipghJGw1Kt6ETIgRry2wZoRYDIt5/3XWVGsmoK9SvQgL2kXbT0p0MfA63IhSwQfYgfvKnS5eTKntB4z5CIbZixsESiX7jZjTerT68tM+dPuF9G83WFSPizSilM1TjYmyEGkKn1ZsSd4pMFdqltZIu9DaFZ94I9/Bb8Y93AU+KY37P5bvFq5iFSqmevYXaFHuhgACep/pHJClA/uvB0m4+eCJAaEV0PsTyfTS18B5O50sGqO9jxYIq7Vja+nf1J3KMgs2WEmiZWMPj30YpqJdH0H4KeQBjzqsgoAv1Oqf5dG6jDqHUl5S98rVRHYnQrIU3nRaqyp0VXgK2Iu2/TEEV4XnbnEHrL1pRZECjEYk0bG15oowbJvzpy7GmkkOpKVwz4ZAfnXnuXt6eyR8fMkTtaUPCWo50/gBYZmXuvhJ9di/SOcodMQKpT1lnCUHrAXjsCFcXHAgjiKAngSvE0vJ6EwH4g0YhndL9Z7NlhegocVZwyu3cqE82WYxMqB4rYBAzrvTVll5kzpB7nVQjYRCne8oZvq4fwzmdcKL4ce5k1JS4IYXbXHwJMIi0HGVRMm6I9wvXaYLeJVp1ZgdG0PYEt+jg=
-notifications:
-  slack:
-    secure: f2lylRvGcAr6C+boZ/weJ6Hvb2FcK8oE2SL9AuXaoh9pTHM6vg22IUMswroE4dj5njYoS0+N64yjWd2r+D5sE+qmcGc/3Yb6XcGxP204x06nERDhv/kVbgrwgUlLxinWJLtoAvXwHOy1zolyGa7WgmYZ4znN1tAoD1OUL51PTsv/7IUzm0SXqsP3+BlFt83snEyI/WCONgS/gxVwnh0ciUVg228pj93LREdk/iO1Zn8XqhxGGXtqVnPUJ0UidB6IzMVkpaiVPO7hCNnwIhmS7ZDNXtUFSD0JzKYrpSVhga/cXJ4NN6MtJ9g5fwERVHtQXfKV+O2nqvVO9uGOIq1s1kF4LeVT555Z+Diwpn7G4B8WqhFeW3veGU/KqzXT09rQnxmLONKlEK2zr8Bx4C8ZOx9TLW5ELO+vXJliPM7I/umaAaQWaFoCNGnsdFY/aXcp3/ASe8ob5VtO8EV29hh1daab0k9NxdHk6XwqZOT7ex4agEs0A9smGyvrjkNQ5eOJDy6U35dBHi9ilNv62c8QDlG6hgCZwIBfsucwvY31HcJvmElhzBdei2KKIaljl5UQy3RRT1C99dI+88PKOoURMI+whmQxa+0Cuek46J4opGFeSLlreP7GVtYLFxnlaA97RZYswIthlaxBMiV8zdG2k6Q22hkb2GIX1GpE5m5TyU4=
+- provider: releases
+  token: $GITHUB_TOKEN
+  file_glob: true
+  file: build/libs/*
+  skip_cleanup: true
+  on:
+    all_branches: true
+    tags: true
+    repo: xebialabs-community/xlr-multi-release-tile
+- provider: script
+  skip_cleanup: true
+  script: rsync --update -raz -i $TRAVIS_BUILD_DIR/build/libs/*.jar $DIST_USER@$DIST_HOST:$DIST_PATH/${TRAVIS_REPO_SLUG#*/}/
+  on:
+    all_branches: true
+    tags: true
+    repo: xebialabs-community/xlr-multi-release-tile
