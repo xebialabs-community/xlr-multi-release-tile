@@ -17,14 +17,12 @@ deploy:
     file_glob: true
     skip_cleanup: true
     on:
-      all_branches: true
       tags: true
       repo: xebialabs-community/xlr-multi-release-tile
   - provider: script
     skip_cleanup: true
     script: rsync --update -raz -i $TRAVIS_BUILD_DIR/build/libs/*.jar $DIST_USER@$DIST_HOST:$DIST_PATH/${TRAVIS_REPO_SLUG#*/}/
     on:
-      all_branches: true
       tags: true
       repo: xebialabs-community/xlr-multi-release-tile
   password:
