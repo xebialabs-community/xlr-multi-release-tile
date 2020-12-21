@@ -28,9 +28,6 @@ taskApi = XLReleaseServiceHolder.getTaskApi()
 
 MANUAL_TASK_DURATION = 60*60*1000
 AUTOMATED_TASK_DURATION = 1*60*1000
-FROM_END_TO_START = False
-releaseStart = 0
-lastPhaseStart = 0
 
 class Planner(object):
     def __init__(self):
@@ -52,7 +49,6 @@ class Planner(object):
         newRelease['endDate'] = release.endDate
         newRelease['plannedDuration'] = release.plannedDuration
         newRelease['status'] = str(release.status)
-        # bill = type(release['startDate'])
         newRelease['phases'] = []
         phases = release.phases
         test = []
@@ -69,25 +65,33 @@ class Planner(object):
             phase_list['tasks'] = []
             tasks = x.tasks
             for w in tasks:
-                # if archived:
-                #     logger.info(str(w))
-        #         test.append(taskApi.getTask(str(w)))
                 task_list = {}
-                task_list['title'] = w.title
-                task_list['owner'] = w.owner
-                task_list['scheduledStartDate'] = w.scheduledStartDate
-                task_list['startDate'] = w.startDate
-                task_list['dueDate'] = w.dueDate
-                task_list['endDate'] = w.endDate
-                task_list['plannedDuration'] = w.plannedDuration
-                task_list['automated'] = w.automated
-                task_list['status'] = str(w.status)
-                task_list['type'] = w.type
+                task_list = self.getTaskFromObject(task_list, w)
                 phase_list['tasks'].append(task_list)
             newRelease['phases'].append(phase_list)
         newRelease = self.convertToEpoch(newRelease)
         newRelease = self.planner(newRelease)
         return newRelease
+
+    def getTaskFromObject(self, task_list, w):
+        task_list['title'] = w.title
+        task_list['owner'] = w.owner
+        task_list['scheduledStartDate'] = w.scheduledStartDate
+        task_list['startDate'] = w.startDate
+        task_list['dueDate'] = w.dueDate
+        task_list['endDate'] = w.endDate
+        task_list['plannedDuration'] = w.plannedDuration
+        task_list['automated'] = w.automated
+        task_list['status'] = str(w.status)
+        task_list['type'] = w.type
+        if str(w.type) == "xlrelease.SequentialGroup":
+            task_list['tasks'] = []
+            for tasks in w.tasks:
+                new_task_list = {}
+                new_task_list = self.getTaskFromObject(new_task_list, tasks)
+                task_list['tasks'].append(new_task_list)
+        return task_list
+
 
     def convertToEpoch(self, release):
         # if str(type(release['startDate'])) == "<type 'java.util.Date'>":
@@ -116,18 +120,22 @@ class Planner(object):
             if isinstance(x['plannedDuration'], java.util.Date):
                 x['plannedDuration'] = x['plannedDuration'].getTime()
             tasks = x['tasks']
-            for w in tasks:
-                if isinstance(w['scheduledStartDate'], java.util.Date):
-                    w['scheduledStartDate'] = w['scheduledStartDate'].getTime()
-                if isinstance(w['startDate'], java.util.Date):
-                    w['startDate'] = w['startDate'].getTime()
-                if isinstance(w['endDate'], java.util.Date):
-                    w['endDate'] = w['endDate'].getTime()
-                if isinstance(w['dueDate'], java.util.Date):
-                    w['dueDate'] = w['dueDate'].getTime()
-                if isinstance(w['plannedDuration'], java.util.Date):
-                    w['plannedDuration'] = w['plannedDuration'].getTime()
+            self.taskConvertToEpoch(tasks)
         return release
+    def taskConvertToEpoch(self, tasks):
+        for w in tasks:
+            if isinstance(w['scheduledStartDate'], java.util.Date):
+                w['scheduledStartDate'] = w['scheduledStartDate'].getTime()
+            if isinstance(w['startDate'], java.util.Date):
+                w['startDate'] = w['startDate'].getTime()
+            if isinstance(w['endDate'], java.util.Date):
+                w['endDate'] = w['endDate'].getTime()
+            if isinstance(w['dueDate'], java.util.Date):
+                w['dueDate'] = w['dueDate'].getTime()
+            if isinstance(w['plannedDuration'], java.util.Date):
+                w['plannedDuration'] = w['plannedDuration'].getTime()
+            if str(w['type']) == "xlrelease.SequentialGroup":
+                self.taskConvertToEpoch(w['tasks'])
 
     def get_Releases(self, releaseId):
         self.planner(release)
@@ -157,32 +165,46 @@ class Planner(object):
     def set_task_duration(self, tasks):
         for x in tasks:
             if x['dueDate'] == None and x['endDate'] == None and x['plannedDuration'] == None:
-                if x['status'] == "IN_PROGRESS" or x['status'] == "DONE":
-                    if x['automated']: #(x['type'] == "xlrelease.CustomScriptTask" or x['type'] == "xlrelease.NotificationTask"):
+                if x['status'] == "IN_PROGRESS" or x['status'] == "DONE" or x['status'] == "FAILED":
+                    if str(x['type']) == "xlrelease.SequentialGroup":
+                        self.set_task_duration(x['tasks'])
+                        logger.info(x['title'])
+                        plannedDuration =0
+                        for task in x['tasks']:
+                            plannedDuration += task['plannedDuration']
+                        x['plannedDuration'] = plannedDuration
+
+                    elif x['automated']:
                         x['plannedDuration'] = AUTOMATED_TASK_DURATION
                         currentTime = int(round(time.time()))
                         currentTime = currentTime*1000
                         if x['plannedDuration'] + x['startDate'] < currentTime:
                             x['plannedDuration'] = currentTime - x['startDate']
-                        # elif x['plannedDuration'] + x['startDate'] > currentTime:
-                        #     x['plannedDuration'] = x['plannedDuration']
-                        # else:
-                        #     x['plannedDuration'] = x['plannedDuration'] + (currentTime-x['startDate'])
                     else:
                         x['plannedDuration'] = MANUAL_TASK_DURATION
                         currentTime = int(round(time.time()))
                         currentTime = currentTime*1000
                         if x['plannedDuration'] + x['startDate'] < currentTime:
                             x['plannedDuration'] = currentTime - x['startDate']
-                        # elif x['plannedDuration'] + x['startDate'] > currentTime:
-                        #     x['plannedDuration'] = x['plannedDuration']
-                        # else:
-                        #     x['plannedDuration'] = x['plannedDuration'] + (currentTime-x['startDate'])
                 else:
-                    if x['automated']:#(x['type'] == "xlrelease.CustomScriptTask" or x['type'] == "xlrelease.NotificationTask"):
+                    if str(x['type']) == "xlrelease.SequentialGroup":
+                        self.set_task_duration(x['tasks'])
+                        plannedDuration =0
+                        for task in x['tasks']:
+                            # logger.info(task['title'])
+                            # logger.info(str(task['plannedDuration']))
+                            if task['plannedDuration'] != None:
+                                plannedDuration += task['plannedDuration']
+                            else:
+                                plannedDuration += 0
+                        x['plannedDuration'] = plannedDuration
+                    elif x['automated']:#(x['type'] == "xlrelease.CustomScriptTask" or x['type'] == "xlrelease.NotificationTask"):
                         x['plannedDuration'] = AUTOMATED_TASK_DURATION
                     else:
                         x['plannedDuration'] = MANUAL_TASK_DURATION
+            ###may not need this
+            elif(str(x['type']) == "xlrelease.SequentialGroup"):
+                x['tasks'] = self.set_task_duration(x['tasks'])
 
     def set_dates(self, phases):
         for x in range(len(phases)):
@@ -216,6 +238,8 @@ class Planner(object):
                             else:
                                 phases[x]['dueDate'] = tasks[i]['dueDate']
                                 phases[x]['tasks'] = tasks
+                logger.info(phases[x]['title'])
+                logger.info(str(phases[x]['dueDate']))     
     def print_dates(self, release):
         logger.info(release['startDate'])
         logger.info("In print dates")
@@ -247,6 +271,9 @@ class Planner(object):
                 x['plannedDuration'] = str(x['plannedDuration'])
             tasks = x['tasks']
             for w in tasks:
+                # for key in w:
+                #     if key != None:
+                #         w[key] = str(w[key])
                 if w['scheduledStartDate'] != None:
                     w['scheduledStartDate'] = str(w['scheduledStartDate'])
                 if w['startDate'] != None:

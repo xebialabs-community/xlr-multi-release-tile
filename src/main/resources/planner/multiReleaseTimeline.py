@@ -108,21 +108,20 @@ def getFilteredReleases(inArchived):
     return releases
 
 def titleFilter(releaseId, theReleaseTitle, arch):
+    passFilter = False
     if releaseTitle and taskTitle:
         if checkForApplicationName(releaseTitle, theReleaseTitle) and checkForTaskTitle(releaseId, taskTitle, arch):
-            return True
+            passFilter = True
     elif releaseTitle:
         if checkForApplicationName(releaseTitle, theReleaseTitle):
-            return True
+            passFilter = True
     elif taskTitle:
         if checkForTaskTitle(releaseId, taskTitle, arch):
-            return True
+            passFilter =  True
+    ### No filters applied for name and task so true
     else:
-        return True
-    return False
-            # if(checkForTaskTitle(x.id, taskTitle)):
-            #     logger.info("hi")
-            # if checkForApplicationName(releaseTitle, x.title):
+        passFilter =  True
+    return passFilter
 
 def gatherReleases(releaseFilters):
     newReleases =[]
@@ -138,13 +137,16 @@ def gatherReleases(releaseFilters):
     return releases
 
 def checkForApplicationName(applicationName, releaseTitle):
+    applicationFilter = False
     if applicationName != None:
         if applicationName in releaseTitle:
-            return True
+            applicationFilter=  True
         else:
-            return False
+            applicationFilter =  False
+    ### No filter for application name applied so pass
     else:
-        return True
+        checkForApplicationName =  True
+    return applicationFilter
 
 def checkForFolder(folderName):
     folders = generateFolderList()
