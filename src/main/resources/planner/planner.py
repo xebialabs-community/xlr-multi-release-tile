@@ -1,4 +1,4 @@
-# Copyright 2020 XEBIALABS
+# Copyright 2021 XEBIALABS
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 #
@@ -61,6 +61,8 @@ class Planner(object):
             phase_list['dueDate'] = x.dueDate
             phase_list['endDate'] = x.endDate
             phase_list['plannedDuration'] = x.plannedDuration
+            if phase_list['plannedDuration'] != None:
+                phase_list['plannedDuration'] = phase_list['plannedDuration']*1000
             phase_list['status'] = str(x.status)
             phase_list['tasks'] = []
             tasks = x.tasks
@@ -81,6 +83,8 @@ class Planner(object):
         task_list['dueDate'] = w.dueDate
         task_list['endDate'] = w.endDate
         task_list['plannedDuration'] = w.plannedDuration
+        if task_list['plannedDuration'] != None:
+            task_list['plannedDuration'] = task_list['plannedDuration']*1000
         task_list['automated'] = w.automated
         task_list['status'] = str(w.status)
         task_list['type'] = w.type
@@ -90,6 +94,25 @@ class Planner(object):
                 new_task_list = {}
                 new_task_list = self.getTaskFromObject(new_task_list, tasks)
                 task_list['tasks'].append(new_task_list)
+        elif str(w.type) == "xlrelease.GateTask":
+            # task_list['dependencies'] = json.loads(w.dependencies)
+            # for a in task_list['dependencies']:
+            #     logger.info(str(a.targetTitle))
+            for a in w.dependencies:
+                if str(a.targetTitle) == str(a.targetDisplayPath):
+                    task_list['automated'] = True
+                else:
+                    task_list['automated'] = False
+            #     task_list['targetTitle'] = str(a.targetTitle)
+            #     task_list['targetDisplayPath'] = str(a.targetDisplayPath)
+                # logger.info(str(a.targetTitle))
+                # logger.info(str(a.targetDisplayPath))
+        ###gate task stuff
+        # if str(w.type) == "xlrelease.GateTask":
+        #     logger.info(w.title)
+        #     for a in w.dependencies:
+        #         logger.info(str(a.targetTitle))
+        #         logger.info(str(a.targetDisplayPath))
         return task_list
 
 
@@ -168,14 +191,19 @@ class Planner(object):
                 if x['status'] == "IN_PROGRESS" or x['status'] == "DONE" or x['status'] == "FAILED":
                     if str(x['type']) == "xlrelease.SequentialGroup":
                         self.set_task_duration(x['tasks'])
-                        logger.info(x['title'])
                         plannedDuration =0
                         for task in x['tasks']:
                             plannedDuration += task['plannedDuration']
                         x['plannedDuration'] = plannedDuration
-
+                        currentTime = int(round(time.time()))
+                        currentTime = currentTime*1000
+                        if x['plannedDuration'] + x['startDate'] < currentTime:
+                            x['plannedDuration'] = currentTime - x['startDate']
                     elif x['automated']:
-                        x['plannedDuration'] = AUTOMATED_TASK_DURATION
+                        if str(x['type']) == "xlrelease.GateTask":
+                            x['plannedDuration'] = 0
+                        else:
+                            x['plannedDuration'] = AUTOMATED_TASK_DURATION
                         currentTime = int(round(time.time()))
                         currentTime = currentTime*1000
                         if x['plannedDuration'] + x['startDate'] < currentTime:
@@ -191,20 +219,26 @@ class Planner(object):
                         self.set_task_duration(x['tasks'])
                         plannedDuration =0
                         for task in x['tasks']:
-                            # logger.info(task['title'])
-                            # logger.info(str(task['plannedDuration']))
                             if task['plannedDuration'] != None:
                                 plannedDuration += task['plannedDuration']
                             else:
                                 plannedDuration += 0
                         x['plannedDuration'] = plannedDuration
+                        # logger.info(x['title'])
+                        # logger.info(str(x['plannedDuration']))
                     elif x['automated']:#(x['type'] == "xlrelease.CustomScriptTask" or x['type'] == "xlrelease.NotificationTask"):
-                        x['plannedDuration'] = AUTOMATED_TASK_DURATION
+                        if str(x['type']) == "xlrelease.GateTask":
+                            x['plannedDuration'] = 0
+                        else:
+                            x['plannedDuration'] = AUTOMATED_TASK_DURATION
+                        # x['plannedDuration'] = AUTOMATED_TASK_DURATION
                     else:
                         x['plannedDuration'] = MANUAL_TASK_DURATION
             ###may not need this
             elif(str(x['type']) == "xlrelease.SequentialGroup"):
                 x['tasks'] = self.set_task_duration(x['tasks'])
+            # logger.info(x['title'])
+            # logger.info(str(x['plannedDuration']))
 
     def set_dates(self, phases):
         for x in range(len(phases)):
@@ -238,8 +272,6 @@ class Planner(object):
                             else:
                                 phases[x]['dueDate'] = tasks[i]['dueDate']
                                 phases[x]['tasks'] = tasks
-                logger.info(phases[x]['title'])
-                logger.info(str(phases[x]['dueDate']))     
     def print_dates(self, release):
         logger.info(release['startDate'])
         logger.info("In print dates")
