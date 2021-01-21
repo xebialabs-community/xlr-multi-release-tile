@@ -113,7 +113,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         var options = {year: 'numeric', month: 'short', day: 'numeric',hour: '2-digit', minute: '2-digit'};
         var a = new Array(obj.length)
         var csvContent = "data:text/csv;charset=utf-8,";
-        var title = "Release Title , Start Date, End Date, Status, Owner, Type, Parent Release" + "\n";
+        var title = "Release Title , Start Date, End Date, Status, Owner, Type, Parent Release, Release-Ready," +
+        "BXImpact-Flag, PendSecurityScan, CodeFrozen-Flag, Dependency-Flag, NoOpenDefects-Flag" + "\n";
         for(var j = 0; j<obj.length; j++){
           // b = [];
           // b.push(JSON.stringify(obj[j]['release']));
@@ -121,32 +122,60 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           releaseStartDate = new Date(releaseStamp).toLocaleString([], options);
           releaseStamp = obj[j]['release'].endDate;
           releaseEndDate =new Date(releaseStamp).toLocaleString([], options);
-          var str = obj[j]['release'].name + " , " + releaseStartDate.replace(/,/g, "") + " , " + releaseEndDate.replace(/,/g, "") + " , " + obj[j]['release'].status + " , " + obj[j]['release'].owner + " , " + "Release" + " , " + obj[j]['release'].name + "\n";
+          var varList = "";
+          var releaseReady = "";
+          var bximpactFlag ="";
+          var pendSecurityScan ="";
+          var codeFrozenFlag ="";
+          var dependencyFlag = "";
+          var noOpenDefectsFlag ="";
+          // var releaseReady ="";
+          for(var a = 0; a<obj[j]['release'].variables.length; a++){
+            switch(obj[j]['release'].variables[a].name) {
+              case "Release-Ready":
+                releaseReady= obj[j]['release'].variables[a].value;
+                break;
+              case "BXImpact-Flag":
+                bximpactFlag= obj[j]['release'].variables[a].value;
+                break;
+              case "PendSecurityScan":
+                pendSecurityScan= obj[j]['release'].variables[a].value;
+                break;
+              case "CodeFrozen-Flag":
+                codeFrozenFlag= obj[j]['release'].variables[a].value;
+                break;
+              case "Dependency-Flag":
+                dependencyFlag= obj[j]['release'].variables[a].value;
+                break;
+              case "NoOpenDefects-Flag":
+                noOpenDefectsFlag= obj[j]['release'].variables[a].value;
+                break;
+              default:
+                //do nothing
+              }
+          }
+          var str = obj[j]['release'].name + " , " + releaseStartDate.replace(/,/g, "") + " , " + releaseEndDate.replace(/,/g, "") + " , " +
+          obj[j]['release'].status + " , " + obj[j]['release'].owner + " , " + "Release" + " , " + obj[j]['release'].name + " , " +
+          releaseReady + " , " + bximpactFlag + " , " + pendSecurityScan + " , " + codeFrozenFlag  +  " , " + dependencyFlag +  " , " + noOpenDefectsFlag + "\n";
           if (typeof obj[j]['release'].task.name != 'undefined')
           {
             var taskStamp = obj[j]['release'].task.startDate;
             var tastStartDate = new Date(taskStamp).toLocaleString([], options);
             taskStamp = obj[j]['release'].task.endDate;
             var taskEndDate = new Date(taskStamp).toLocaleString([], options);
-            str += obj[j]['release'].task.name + " , " + tastStartDate.replace(/,/g, "") + " , " + taskEndDate.replace(/,/g, "")  + " , " + obj[j]['release'].task.status + " , "+ obj[j]['release'].task.owner + " , " + "Task" + " , " + obj[j]['release'].name + "\n";
+            str += obj[j]['release'].task.name + " , " + tastStartDate.replace(/,/g, "") + " , " +
+            taskEndDate.replace(/,/g, "")  + " , " + obj[j]['release'].task.status + " , "+
+            obj[j]['release'].task.owner + " , " + "Task" + " , " + obj[j]['release'].name + "\n";
           }
             for (var i = 0; i <obj[j]['release'].phases.length; i++) {
               var stamp = obj[j]['release'].phases[i].startDate;
               var startDate = new Date(stamp).toLocaleString([], options);
               stamp = obj[j]['release'].phases[i].endDate;
               var endDate = new Date(stamp).toLocaleString([], options);
-              str += obj[j]['release'].phases[i].name + " , " + startDate.replace(/,/g, "") + " , " + endDate.replace(/,/g, "")  + " , " + obj[j]['release'].phases[i].status + " , "+ " " + " , " + "Phase" + " , " + obj[j]['release'].name + "\n";
+              str += obj[j]['release'].phases[i].name + " , " + startDate.replace(/,/g, "") + " , " +
+               endDate.replace(/,/g, "")  + " , " + obj[j]['release'].phases[i].status + " , "+ " " + " , " +
+               "Phase" + " , " + obj[j]['release'].name + "\n";
             }
-          // b.push(obj[j]['release'].name);
-          // var releaseStamp = obj[j]['release'].startDate;
-          // b.push(releaseStartDate = new Date(releaseStamp));//response.data.data.release.phases.endDate;
-          // releaseStamp = obj[j]['release'].endDate;
-          // b.push(releaseEndDate =new Date(releaseStamp));
-          // b.push("\n");
-          // var hi =  obj[j]['release'];
-          // obj[j]['release'] =  hi + "\\n";
-          // obj[j].write('\n')
-          // a[j] = new Array(str);
           if(j == 0){
             str = title+str;
           }
@@ -158,25 +187,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         var encodedUri = encodeURI(csvContent);
         window.open(encodedUri);
       }
-  </script>
-  <script type="text/javascript">
-  // window.xlrelease.generatecsv(function(response){
-  // function generatecsv(response){
-  // document.getElementById('info').innerHTML = "";
-  // let a = [];
-  // var table = document.getElementById('myTable');
-  // for (var r = 0, n = table.rows.length; r < n; r++) {
-  //   for (var c = 0, m = table.rows[0].cells.length; c < m; c=c+2) {
-  //       var i = 0;
-  //       console.log(c);
-  //       a[0].push(table.rows[0].cells[c].innerHTML);
-  //   }
-  // }
-//   console.log("hodsaf")
-//   var csvContent = "data:text/csv;charset=utf-8," + response;
-//   var encodedUri = encodeURI(csvContent);
-//   window.open(encodedUri);
-// }
   </script>
 </head>
 

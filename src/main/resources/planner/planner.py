@@ -29,6 +29,7 @@ taskApi = XLReleaseServiceHolder.getTaskApi()
 MANUAL_TASK_DURATION = 60*60*1000
 AUTOMATED_TASK_DURATION = 1*60*1000
 
+hardcodedVars = ["Release-Ready", "CodeFrozen-Flag", "PendSecurityScan", "Dependency-Flag", "NoOpenDefects-Flag", "BXImpact-Flag"]
 class Planner(object):
     def __init__(self):
         return
@@ -38,9 +39,20 @@ class Planner(object):
         newRelease['release'] = {}
         if archived:
             release = releaseApi.getArchivedRelease(releaseId)
+            logger.info("count")
             #getArchivedRelease
         else:
             release = releaseApi.getRelease(releaseId)
+            logger.info("count")
+        variableMap = []
+        # variableSpot['name'] = {}
+        for var in release.variables:
+            if str(var.key) in hardcodedVars:
+                variableSpot = {}
+                variableSpot['name'] = str(var.key)
+                variableSpot['value'] = str(var.value)
+                variableMap.append(variableSpot)
+        newRelease['variables'] = variableMap
         newRelease['owner'] = str(release.owner)
         newRelease['title'] = release.title
         newRelease['scheduledStartDate'] = release.scheduledStartDate
@@ -71,6 +83,7 @@ class Planner(object):
                 task_list = self.getTaskFromObject(task_list, w)
                 phase_list['tasks'].append(task_list)
             newRelease['phases'].append(phase_list)
+        del release
         newRelease = self.convertToEpoch(newRelease)
         newRelease = self.planner(newRelease)
         return newRelease
@@ -231,7 +244,6 @@ class Planner(object):
                             x['plannedDuration'] = 0
                         else:
                             x['plannedDuration'] = AUTOMATED_TASK_DURATION
-                        # x['plannedDuration'] = AUTOMATED_TASK_DURATION
                     else:
                         x['plannedDuration'] = MANUAL_TASK_DURATION
             ###may not need this

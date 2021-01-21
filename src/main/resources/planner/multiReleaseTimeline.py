@@ -70,8 +70,12 @@ def get_Releases():
                 if(fromDateTime is None and toDateTime is None and endFromDateTime is None and endToDateTime is None):
                     get_planned_dates(x.id, arch)
                 else:
-                    if(dateFilter(x.startDate, x.dueDate)):
-                        get_planned_dates(x.id, arch)
+                    if x.startDate == None:
+                        releaseStartDate = x.scheduledStartDate
+                    else:
+                        releaseStartDate = x.startDate
+                        if(dateFilter(releaseStartDate, x.dueDate)):
+                            get_planned_dates(x.id, arch)
     ##archived portion
     if archivedReleases != []:
         for x in archivedReleases:
@@ -128,7 +132,6 @@ def gatherReleases(releaseFilters):
     releases = []
     i = 0
     newReleases = releaseApi.searchReleases(releaseFilters, i, 100)
-    # releases = newReleases
     while newReleases:
         releases = list(releases) + list(newReleases)
         newReleases = []
@@ -220,6 +223,7 @@ def print_dates(release):
     temp['release']['name'] = release['title']
     temp['release']['status'] = release['status']
     temp['release']['owner'] = release['owner']
+    temp['release']['variables'] = release['variables']
 
     if release['startDate'] != None:
         temp['release']['startDate'] = int(release['startDate'])
